@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sakura",
+  title: "Sakura 🌸",
   description: "Hackclub event @ JAPAN",
 };
 
