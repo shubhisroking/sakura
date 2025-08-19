@@ -1,7 +1,8 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import TextSlideButton from "@/components/text-slide-button";
+import { signInWithSlack } from "@/lib/auth-client";
 
 export default function DetailsSection() {
   return (
@@ -80,13 +81,18 @@ export default function DetailsSection() {
           </div>
         </div>
 
-        <div className="text-center">
-          <Button 
-            size="lg" 
-            className="bg-[#e3e3db] text-[#141414] hover:bg-[#d3d3ca] text-xl px-12 py-6 rounded-full font-serif"
-          >
-            Login with Slack
-          </Button>
+        <div className="flex justify-center items-center mt-16">
+          <TextSlideButton
+            text="Login with Slack"
+            onClick={() => {
+              signInWithSlack();
+            }}
+            color="#4A154B"
+            textColor="#FFFFFF"
+            secondaryColor="#FFFFFF"
+            secondaryTextColor="#4A154B"
+            className="text-xl px-12 py-6 rounded-full font-serif"
+          />
         </div>
       </div>
     </section>
