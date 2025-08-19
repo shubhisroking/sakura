@@ -15,7 +15,7 @@ datasource db {
 }
 
 model User {
-  id            String    @id
+  id            String         @id
   name          String
   email         String
   emailVerified Boolean
@@ -24,6 +24,8 @@ model User {
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
+  projects      Project[]
+  timerSessions TimerSession[]
 
   @@unique([email])
   @@map("user")
@@ -72,4 +74,33 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+model Project {
+  id            String         @id @default(cuid())
+  name          String
+  description   String?
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  totalHours    Float          @default(0)
+  timerSessions TimerSession[]
+
+  @@map("project")
+}
+
+model TimerSession {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId String
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  startTime DateTime  @default(now())
+  endTime   DateTime?
+  duration  Float?    @default(0) // Duration in hours
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("timer_session")
 }
