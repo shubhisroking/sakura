@@ -4,8 +4,8 @@ import mongoose from 'mongoose';
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/sakura';
 
 interface Cached {
-  conn: typeof mongoose | null;
-  promise: Promise<typeof mongoose> | null;
+  conn: mongoose.Mongoose | null;
+  promise: Promise<mongoose.Mongoose> | null;
 }
 
 // Add mongoose to the NodeJS global type
@@ -43,8 +43,12 @@ async function dbConnect() {
       console.log('[MongoDB] Database name:', 
         global.mongooseCache.conn.connection.db.databaseName);
       
-      const collections = await global.mongooseCache.conn.connection.db.listCollections().toArray();
-      console.log('[MongoDB] Available collections:', collections.map(c => c.name));
+      try {
+        const collections = await global.mongooseCache.conn.connection.db.listCollections().toArray();
+        console.log('[MongoDB] Available collections:', collections.map(c => c.name));
+      } catch (err) {
+        console.warn('[MongoDB] Could not list collections:', err);
+      }
     }
     
   } catch (error) {
