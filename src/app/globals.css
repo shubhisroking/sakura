@@ -119,4 +119,25 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    will-change: transform;
+  }
+  
+  .word {
+    display: inline-block;
+  }
+}
+
+html {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
