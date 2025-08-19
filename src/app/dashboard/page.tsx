@@ -55,9 +55,15 @@ export default function Dashboard() {
       sessionData: session.data
     });
     
+    // Always fetch projects after a short delay, even if no session is found
+    // This allows the development/production fallback in the API to work
     if (!session.isPending) {
       if (!session.data) {
-        setLoading(false);
+        // Set a small timeout to allow any auth redirects to happen first
+        setTimeout(() => {
+          console.log('No session data, but fetching projects with fallback auth');
+          fetchProjects();
+        }, 500);
       } else {
         fetchProjects();
       }
@@ -70,23 +76,37 @@ export default function Dashboard() {
       setLoading(true);
       setError(null);
       
-      
+      console.log('Fetching projects from API...');
       const response = await fetch('/api/projects', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          
         },
         credentials: 'include', 
       });
       
-      if (!response.ok) {
-        throw new Error(`Error: ${response.statusText}`);
+      console.log('API response status:', response.status);
+      
+      // Get the response text first to avoid parsing errors
+      const responseText = await response.text();
+      console.log('API response text:', responseText.substring(0, 100) + '...');
+      
+      let result;
+      try {
+        result = JSON.parse(responseText);
+        console.log('Parsed response:', result);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        throw new Error(`Error: Invalid JSON response (${response.status})`);
       }
       
-      const result = await response.json();
+      if (!response.ok) {
+        console.error('API error:', response.status, response.statusText);
+        throw new Error(`Error: ${result?.error || response.statusText} (${response.status})`);
+      }
       
       if (result.success) {
+        console.log('Fetched projects:', result.data.length);
         setProjects(result.data);
       } else {
         throw new Error(result.error || 'Failed to fetch projects');

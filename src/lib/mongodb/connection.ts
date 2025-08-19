@@ -67,7 +67,12 @@ async function dbConnect() {
     
   } catch (error) {
     console.error('[MongoDB] Connection error:', error);
-    console.error('[MongoDB] Error details:', JSON.stringify(error, null, 2));
+    // Safely stringify the error object
+    try {
+      console.error('[MongoDB] Error details:', JSON.stringify(error, null, 2));
+    } catch (e) {
+      console.error('[MongoDB] Error details (non-stringifiable):', Object.keys(error || {}));
+    }
     global.mongooseCache.promise = null;
     throw error;
   }

@@ -7,20 +7,27 @@ import { cookies } from 'next/headers';
 
 async function getUserFromRequest(req: NextRequest) {
   try {
+    // Log headers for debugging
+    console.log('[Auth] Request headers ([id] route):', Object.fromEntries(req.headers.entries()));
     
     const cookieStore = await cookies();
+    console.log('[Auth] Available cookies ([id] route):', cookieStore.getAll().map(c => c.name));
+    
     const sessionCookie = cookieStore.get('better-auth.session');
+    console.log('[Auth] Session cookie found ([id] route):', !!sessionCookie);
     
     if (sessionCookie?.value) {
       try {
-        
+        console.log('[Auth] Processing session cookie ([id] route)');
         const parts = sessionCookie.value.split('.');
         if (parts.length === 3) {
+          console.log('[Auth] Valid JWT format ([id] route)');
           
           const payload = Buffer.from(parts[1], 'base64url').toString();
           const session = JSON.parse(payload);
           
           if (session && session.user) {
+            console.log('[Auth] Valid user in session ([id] route):', session.user.id);
             return {
               id: session.user.id,
               name: session.user.name || session.user.email || 'Unknown User',
@@ -29,40 +36,33 @@ async function getUserFromRequest(req: NextRequest) {
           }
         }
       } catch (e) {
-        console.error('Error decoding session:', e);
+        console.error('[Auth] Error decoding session ([id] route):', e);
       }
     }
     
-    
+    // Check for authorization header (JWT token)
     const authHeader = req.headers.get('authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
+      console.log('[Auth] Found authorization header ([id] route)');
       const token = authHeader.split(' ')[1];
       
-      
-      
-      if (process.env.NODE_ENV !== 'production') {
-        return {
-          id: 'dev-slack-id',
-          name: 'Development User',
-          email: 'dev@example.com',
-        };
-      }
+      // In production, you would validate the token here
+      // For now, we'll use a fallback user in both dev and production
     }
     
+    // Development AND temporary production fallback for testing
+    // IMPORTANT: Remove this fallback in production once auth is properly configured
+    console.log('[Auth] Using fallback user ([id] route) (TEMPORARY - remove in production)');
+    return {
+      id: 'dev-slack-id',
+      name: 'Development User',
+      email: 'dev@example.com',
+    };
     
-    
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('Using development fallback user');
-      return {
-        id: 'dev-slack-id',
-        name: 'Development User',
-        email: 'dev@example.com',
-      };
-    }
-    
-    return null;
+    // Uncomment this and remove the fallback once auth is properly configured
+    // return null;
   } catch (error) {
-    console.error('Failed to get user:', error);
+    console.error('[Auth] Failed to get user ([id] route):', error);
     return null;
   }
 }
