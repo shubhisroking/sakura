@@ -76,8 +76,10 @@ const ProjectSchema = new Schema<IProject>(
   }
 );
 
-// Create or retrieve the model, specifying the collection name as "sakura"
-export const Project = mongoose.models.Project || mongoose.model<IProject>('Project', ProjectSchema, 'sakura');
+// Create or retrieve the model, using "projects" as the collection name instead of "sakura"
+// This follows MongoDB conventions where collection names are typically plural
+export const Project = mongoose.models.Project || mongoose.model<IProject>('Project', ProjectSchema, 'projects');
 
-// Log that the model has been initialized with the sakura collection
-console.log('[MongoDB] Project model initialized with collection:', Project.collection.name);
+// Log that the model has been initialized with the collection
+console.log('[MongoDB] Project model initialized with collection name:', Project.collection.name);
+console.log('[MongoDB] Project model collection namespace:', Project.collection.namespace);

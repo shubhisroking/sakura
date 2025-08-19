@@ -107,8 +107,24 @@ export async function POST(req: NextRequest) {
 
     console.log('[API] Connecting to database...');
     
-    await dbConnect();
-    console.log('[API] Connected to database');
+    try {
+      await dbConnect();
+      console.log('[API] Connected to database successfully');
+      
+      // Verify database connection is active
+      const mongoose = global.mongooseCache.conn;
+      if (mongoose && mongoose.connection) {
+        console.log('[API] MongoDB connection state:', mongoose.connection.readyState);
+        if (mongoose.connection.db) {
+          console.log('[API] Connected to database:', mongoose.connection.db.databaseName);
+        }
+      } else {
+        console.warn('[API] Connected but mongoose connection object is undefined');
+      }
+    } catch (dbError: any) {
+      console.error('[API] Database connection error:', dbError);
+      throw new Error(`Database connection failed: ${dbError?.message || 'Unknown error'}`);
+    }
 
     
     const projectData = {
@@ -123,12 +139,31 @@ export async function POST(req: NextRequest) {
     };
     
     console.log('[API] Creating project with data:', projectData);
+    console.log('[API] Project model collection:', Project.collection.name);
+    console.log('[API] Project model collection namespace:', Project.collection.namespace);
 
+    let createdProject;
     
-    const project = await Project.create(projectData);
-    console.log('[API] Project created successfully with ID:', project._id);
+    try {
+      createdProject = await Project.create(projectData);
+      console.log('[API] Project created successfully with ID:', createdProject._id);
+      
+      // Verify the project was created by fetching it back
+      const verifyProject = await Project.findById(createdProject._id);
+      if (verifyProject) {
+        console.log('[API] Project verified in database:', verifyProject._id);
+      } else {
+        console.warn('[API] Project created but could not be verified in database');
+      }
+    } catch (createError: any) {
+      console.error('[API] Error creating project in database:', createError);
+      console.error('[API] Error details:', JSON.stringify(createError, null, 2));
+      throw new Error(`Failed to create project: ${createError?.message || 'Unknown error'}`);
+    }
+    
+    return NextResponse.json({ success: true, data: createdProject }, { status: 201 });
 
-    return NextResponse.json({ success: true, data: project }, { status: 201 });
+    return NextResponse.json({ success: true, data: createdProject }, { status: 201 });
   } catch (error: any) {
     console.error('[API] Error creating project:', error);
     return NextResponse.json(
@@ -155,21 +190,45 @@ export async function GET(req: NextRequest) {
 
     
     console.log('[API] Connecting to database...');
-    await dbConnect();
-    console.log('[API] Connected to database');
+    
+    try {
+      await dbConnect();
+      console.log('[API] Connected to database successfully');
+      
+      // Verify database connection is active
+      const mongoose = global.mongooseCache.conn;
+      if (mongoose && mongoose.connection) {
+        console.log('[API] MongoDB connection state:', mongoose.connection.readyState);
+        if (mongoose.connection.db) {
+          console.log('[API] Connected to database:', mongoose.connection.db.databaseName);
+        }
+      }
+    } catch (dbError: any) {
+      console.error('[API] Database connection error:', dbError);
+      throw new Error(`Database connection failed: ${dbError?.message || 'Unknown error'}`);
+    }
 
     console.log('[API] Finding projects for slackUserId:', user.id);
     
-    const projects = await Project.find({ slackUserId: user.id })
-      .sort({ createdAt: -1 });
+    let foundProjects;
+    try {
+      foundProjects = await Project.find({ slackUserId: user.id })
+        .sort({ createdAt: -1 });
+        
+      console.log('[API] Found', foundProjects.length, 'projects');
       
-    console.log('[API] Found', projects.length, 'projects');
+      const modelName = Project.collection.name;
+      const namespace = Project.collection.namespace;
+      console.log('[API] Projects are stored in collection:', modelName);
+      console.log('[API] Collection namespace:', namespace);
+    } catch (findError: any) {
+      console.error('[API] Error finding projects:', findError);
+      throw new Error(`Failed to find projects: ${findError?.message || 'Unknown error'}`);
+    }
     
-    
-    const modelName = Project.collection.name;
-    console.log('[API] Projects are stored in collection:', modelName);
+    return NextResponse.json({ success: true, data: foundProjects }, { status: 200 });
 
-    return NextResponse.json({ success: true, data: projects }, { status: 200 });
+    return NextResponse.json({ success: true, data: foundProjects }, { status: 200 });
   } catch (error: any) {
     console.error('[API] Error fetching projects:', error);
     return NextResponse.json(

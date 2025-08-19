@@ -25,20 +25,34 @@ async function dbConnect() {
   }
 
   if (!global.mongooseCache.promise) {
-    console.log('[MongoDB] Creating new connection to:', MONGODB_URI);
+    // Extract the original connection string before adding parameters
+    const baseUri = MONGODB_URI.includes('?') 
+      ? MONGODB_URI.split('?')[0] 
+      : MONGODB_URI;
+      
+    // Parse existing query parameters
+    const queryParams = new URLSearchParams(
+      MONGODB_URI.includes('?') ? MONGODB_URI.split('?')[1] : ''
+    );
+    
+    // Ensure we're explicitly setting the database name in both the URL and options
+    const finalUri = `${baseUri.endsWith('/') ? baseUri.slice(0, -1) : baseUri}/sakura?${queryParams.toString()}`;
+    
+    console.log('[MongoDB] Creating new connection with explicit database name');
     const opts = {
       bufferCommands: false,
       dbName: 'sakura', // Explicitly set the database name to ensure we use sakura
     };
 
-    global.mongooseCache.promise = mongoose.connect(MONGODB_URI, opts);
+    console.log('[MongoDB] Connection options:', opts);
+    global.mongooseCache.promise = mongoose.connect(finalUri, opts);
   }
   
   try {
     global.mongooseCache.conn = await global.mongooseCache.promise;
     console.log('[MongoDB] Successfully connected to database');
     
-    // List all collections if the connection is successful
+    // Log detailed connection information
     if (global.mongooseCache.conn?.connection?.db) {
       console.log('[MongoDB] Database name:', 
         global.mongooseCache.conn.connection.db.databaseName);
@@ -53,6 +67,7 @@ async function dbConnect() {
     
   } catch (error) {
     console.error('[MongoDB] Connection error:', error);
+    console.error('[MongoDB] Error details:', JSON.stringify(error, null, 2));
     global.mongooseCache.promise = null;
     throw error;
   }
