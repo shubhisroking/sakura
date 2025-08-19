@@ -400,7 +400,7 @@ export default function Dashboard() {
                 <Label htmlFor="repo">Repository URL (Optional)</Label>
                 <Input 
                   id="repo"
-                  placeholder="https:
+                  placeholder="https://github.com/shubhisroking/sakura"
                   value={repositoryUrl}
                   onChange={(e) => setRepositoryUrl(e.target.value)}
                 />
@@ -410,7 +410,7 @@ export default function Dashboard() {
                 <Label htmlFor="live">Live URL (Optional)</Label>
                 <Input 
                   id="live"
-                  placeholder="https:
+                  placeholder="https://sakuraysws.vercel.app"
                   value={liveUrl}
                   onChange={(e) => setLiveUrl(e.target.value)}
                 />
